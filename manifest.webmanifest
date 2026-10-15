@@ -1,0 +1,17 @@
+{
+  "name": "ロシア文字練習帳",
+  "short_name": "ロシア文字",
+  "description": "ロシア語のアルファベット（キリル文字）を一覧・クイズ・読み上げ・発音チェック・解説で練習する練習帳",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf7f1",
+  "theme_color": "#b3342f",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

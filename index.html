@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ロシア文字練習帳</title>
+  <meta name="description" content="ロシア語のアルファベット（キリル文字）を、一覧・クイズ・読み上げ・発音チェック・文法解説で練習できる練習帳。歌「カチューシャ」の単語クイズ付き。">
+  <meta name="theme-color" content="#fbf7f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ロシア文字">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Shippori+Mincho:wght@600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Apply the saved theme before paint to avoid a flash
+    try { var t = localStorage.getItem('az.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark ru" aria-hidden="true">Ж</span>
+        <div>
+          <h1>ロシア文字練習帳</h1>
+          <p class="brand-sub ru" lang="ru">Азбука · тетрадь</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="テーマを切り替え" title="テーマを切り替え">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </header>
+
+    <main>
+      <!-- ===== Quiz ===== -->
+      <section class="view" id="view-quiz" aria-label="クイズ">
+        <div id="quizSetup" class="stack">
+          <div class="modes" id="modeList"></div>
+
+          <details class="settings" id="settingsBox">
+            <summary><span>出題の設定</span><span class="summary-line" id="settingsSummary"></span></summary>
+            <div class="settings-body">
+              <div class="field-row">
+                <label class="field">
+                  <span class="field-label">問題数</span>
+                  <select id="optCount">
+                    <option value="5">5問</option>
+                    <option value="10">10問</option>
+                    <option value="20">20問</option>
+                    <option value="33">33問</option>
+                    <option value="all">全部</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">書き取りのキーボード</span>
+                  <select id="optKbd">
+                    <option value="abc">アルファベット順</option>
+                    <option value="jcuken">ロシア語配列（ЙЦУКЕН）</option>
+                  </select>
+                </label>
+              </div>
+              <div class="field">
+                <span class="field-label">文字の範囲（文字のクイズ）</span>
+                <div class="chips" id="groupChips"></div>
+              </div>
+              <div class="field">
+                <span class="field-label">単語の範囲（単語のクイズ）</span>
+                <div class="chips" id="catChips"></div>
+                <p class="hint" id="poolHint"></p>
+              </div>
+              <label class="check"><input type="checkbox" id="optStress" checked> 単語にアクセント記号（́）を付ける</label>
+              <label class="check"><input type="checkbox" id="optWeak" checked> 間違えた文字・単語を多めに出す</label>
+              <label class="check"><input type="checkbox" id="optAuto"> 正解したら自動で次の問題へ</label>
+              <label class="check"><input type="checkbox" id="optSpeak" checked> 答え合わせのときに読み上げる</label>
+              <p class="hint">読み上げの声・速さは「発音」タブで変えられます。</p>
+            </div>
+          </details>
+        </div>
+
+        <div id="quizPlay" class="quiz" hidden>
+          <div class="quiz-top">
+            <button class="text-btn" id="quitBtn" type="button">&larr; やめる</button>
+            <span class="progress-label" id="progressLabel">1 / 10</span>
+            <span class="score-label" id="scoreLabel">0 正解</span>
+          </div>
+          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+          <p class="prompt" id="prompt"></p>
+          <div class="stage" id="stage"></div>
+          <div class="gloss" id="gloss" aria-live="polite"></div>
+
+          <div class="choices" id="choices"></div>
+          <div class="typing" id="typing" hidden>
+            <div class="type-display ru" id="typeDisplay" aria-live="polite" aria-label="入力中の答え"></div>
+            <div class="kbd" id="kbd" role="group" aria-label="文字キー"></div>
+          </div>
+          <div class="next-row">
+            <button class="btn ghost" id="replayBtn" type="button" hidden>もう一度聞く</button>
+            <button class="btn" id="nextBtn" type="button" hidden>次へ</button>
+          </div>
+        </div>
+
+        <div id="quizResult" class="result" hidden>
+          <p class="result-kicker ru" lang="ru">Результат</p>
+          <p class="result-score"><span id="resultScore">0</span><small id="resultTotal"> / 10</small></p>
+          <p class="result-title" id="resultTitle"></p>
+          <div class="result-actions">
+            <button class="btn" id="againBtn" type="button">もう一度</button>
+            <button class="btn ghost" id="retryMissBtn" type="button" hidden>間違えた問題だけ</button>
+            <button class="btn ghost" id="backBtn" type="button">形式を選ぶ</button>
+          </div>
+          <div class="review" id="review"></div>
+        </div>
+      </section>
+
+      <!-- ===== Letters ===== -->
+      <section class="view" id="view-letters" aria-label="文字">
+        <div class="toolbar">
+          <div class="seg" id="faceSeg" role="radiogroup" aria-label="書体"></div>
+          <label class="check small"><input type="checkbox" id="hideReading"> 読みを隠す</label>
+          <label class="check small"><input type="checkbox" id="byGroup" checked> グループ別</label>
+        </div>
+        <p class="hint">カードをタップすると、文字の名前・発音のコツ・例の単語を表示します（♪で読み上げ）。下の線はクイズの正答率です。</p>
+        <div id="alphaGrid"></div>
+      </section>
+
+      <!-- ===== Guide ===== -->
+      <section class="view" id="view-guide" aria-label="解説">
+        <p class="lead">発音のルールや文法など、ロシア語ならではの事柄をまとめました。<span class="ex-demo">色の付いたロシア語</span>はタップすると読み上げます。</p>
+        <nav class="toc" id="guideToc" aria-label="目次"></nav>
+        <div id="guideBody"></div>
+      </section>
+
+      <!-- ===== Song ===== -->
+      <section class="view" id="view-song" aria-label="カチューシャ">
+        <article class="song-hero">
+          <p class="song-title ru" lang="ru" id="songTitle"></p>
+          <p class="song-sub">カチューシャ</p>
+          <dl class="song-meta" id="songMeta"></dl>
+          <p>1938 年に作られたソビエトの歌謡曲です。岸辺で恋人を想う娘カチューシャの歌で、遠い国境で働く兵士に歌声を届けたいという内容が歌われます。第二次世界大戦中に広く歌われ、日本でも戦後に日本語の訳詞で親しまれました。</p>
+          <p>題名の <span class="ex" data-say="Катюша" role="button" tabindex="0"><span class="ru">Катю́ша</span></span> は、女性の名前 Екатери́на（エカテリーナ）の愛称です（「解説」の「名前・父称・愛称」も参照）。大戦中のソ連軍の多連装ロケット砲も、この歌にちなんで「カチューシャ」と呼ばれました。</p>
+        </article>
+
+        <h2 class="sub-head">歌に出てくる単語</h2>
+        <div class="toolbar">
+          <label class="check small"><input type="checkbox" id="songHide"> 意味を隠す</label>
+          <button class="btn small" id="songQuizBtn" type="button">単語 → 日本語クイズ</button>
+          <button class="btn small ghost" id="songQuizJaBtn" type="button">日本語 → 単語クイズ</button>
+        </div>
+        <div class="word-list" id="songWords"></div>
+
+        <h2 class="sub-head">歌詞で練習する</h2>
+        <div class="notice">
+          <b>歌詞はアプリに収録していません</b>
+          <p>「カチューシャ」の歌詞（作詞：イサコフスキー、1973 年没）は日本でもまだ著作権の保護期間中のため、本アプリには収録していません。お手持ちの歌集や CD の歌詞カードなどを見ながら、下の欄にロシア語の歌詞を入力（貼り付け）すると、その歌詞で読み上げ・発音チェック・穴埋めクイズができます。</p>
+          <p>入力した歌詞は、お使いのブラウザの中だけに保存されます。外部へ送信したり、他の人と共有したりはしません。</p>
+        </div>
+        <div id="lyricEdit">
+          <textarea id="lyricInput" class="ru" lang="ru" rows="8" spellcheck="false" placeholder="ここにロシア語の歌詞を 1 行ずつ入力（貼り付け）してください"></textarea>
+          <div class="row-actions">
+            <button class="btn" id="lyricSave" type="button">保存して練習する</button>
+            <button class="btn ghost" id="lyricCancel" type="button" hidden>やめる</button>
+          </div>
+          <p class="hint">ほかの歌や文章でも使えます。アクセントの位置がわかる場合は、強く読む母音の後ろに + を書くとアクセント記号付きで表示します（例：Катю+ша）。</p>
+        </div>
+        <div id="lyricView" hidden>
+          <div class="toolbar">
+            <label class="check small"><input type="checkbox" id="lyricLat" checked> ラテン文字の読み</label>
+            <button class="btn small" id="lyricPlayAll" type="button">♪ 全部読み上げ</button>
+            <button class="btn small" id="lyricQuizBtn" type="button">穴埋めクイズ</button>
+            <button class="text-btn" id="lyricEditBtn" type="button">編集</button>
+            <button class="text-btn danger" id="lyricClear" type="button">消去</button>
+          </div>
+          <p class="hint">単語をタップすると読み上げ、行の ♪ で 1 行を読み上げ、🎤 でその行の発音チェックへ移ります。ラテン文字の読みは機械的に転写したもので、アクセントによる母音の弱化などは反映されません。</p>
+          <div class="lyric-lines" id="lyricLines"></div>
+        </div>
+      </section>
+
+      <!-- ===== Speak ===== -->
+      <section class="view" id="view-speak" aria-label="発音">
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">練習する言葉</span>
+            <select id="spSource"></select>
+          </label>
+        </div>
+        <article class="sp-card" id="spCard">
+          <div class="sp-nav">
+            <button class="icon-btn" id="spPrev" type="button" aria-label="前へ">&lsaquo;</button>
+            <span class="sp-pos" id="spPos"></span>
+            <button class="icon-btn" id="spNext" type="button" aria-label="次へ">&rsaquo;</button>
+          </div>
+          <p class="sp-word ru" lang="ru" id="spWord"></p>
+          <p class="sp-kana" id="spKana"></p>
+          <p class="sp-ja" id="spJa"></p>
+          <p class="sp-note" id="spNote"></p>
+          <div class="sp-actions">
+            <button class="btn" id="spPlay" type="button">♪ 聞く</button>
+            <button class="btn ghost" id="spSlow" type="button">♪ ゆっくり</button>
+            <button class="btn mic" id="spMic" type="button">🎤 話してみる</button>
+          </div>
+          <div class="sp-result" id="spResult" aria-live="polite"></div>
+        </article>
+        <p class="hint" id="micHint"></p>
+
+        <h2 class="sub-head">自由に入力して読み上げ</h2>
+        <textarea id="freeInput" class="ru" lang="ru" rows="2" spellcheck="false" placeholder="例：Я люблю русский язык."></textarea>
+        <div class="row-actions">
+          <button class="btn small" id="freePlay" type="button">♪ 読み上げ</button>
+          <button class="btn small ghost" id="freeMic" type="button">🎤 この文で発音チェック</button>
+        </div>
+        <p class="free-lat" id="freeLat"></p>
+
+        <h2 class="sub-head">読み上げの設定</h2>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">声</span>
+            <select id="optVoice"></select>
+          </label>
+          <label class="field">
+            <span class="field-label">速さ</span>
+            <select id="optRate">
+              <option value="0.6">ゆっくり</option>
+              <option value="0.8">すこしゆっくり</option>
+              <option value="1">ふつう</option>
+              <option value="1.15">すこし速い</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">音量</span>
+            <select id="optVolume">
+              <option value="0.4">小さめ</option>
+              <option value="0.7">すこし小さめ</option>
+              <option value="1">最大</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint" id="speechHint"></p>
+
+        <div class="note-box">
+          <b>発音チェックのしくみ</b>
+          <ul>
+            <li>「話してみる」を押してから言葉を読むと、ブラウザの音声認識（ロシア語）が聞き取った文字を表示し、お手本とどれくらい一致したかを示します。</li>
+            <li>音声認識は「ネイティブにどう聞こえたか」のめやすです。発音の細かな採点ではありません。1 文字だけ・短い単語は認識されにくいので、単語や短い文で試すのがおすすめです。</li>
+            <li>Chrome・Edge・Safari で使えます（Firefox は非対応）。多くのブラウザでは、録音した音声が認識のためにブラウザの提供元のサーバーへ送られます。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ===== About ===== -->
+      <section class="view prose" id="view-about" aria-label="このアプリについて">
+        <h2>このアプリについて</h2>
+        <p>ロシア語のアルファベット（キリル文字）33 文字を読めるようになることを目指す練習帳です。文字の形と音を覚え、外来語やあいさつを読んで「読めた！」を積み重ね、歌「カチューシャ」の単語や、ご自分で入力した歌詞で練習できます。</p>
+
+        <h3>練習のしかた</h3>
+        <dl class="defs">
+          <dt>文字</dt><dd>33 文字の一覧です。「ニセモノ注意」（В・Н・Р・С・У・Х など）のように、覚えやすいグループに分けています。書体をイタリック・筆記体に切り替えると、形の変わる文字を確認できます。</dd>
+          <dt>クイズ</dt><dd>文字→音、音→文字、イタリック・筆記体、単語を読む、聞き取り、書き取り、名詞の性、カチューシャの単語、歌詞の穴埋めがあります。間違えた文字・単語ほど多く出題されます。</dd>
+          <dt>解説</dt><dd>アクセントと母音の弱化、無声化、例外的な読み方、名詞の性・格、動詞の変化と体、名前と愛称など、ロシア語ならではの事柄をまとめています。</dd>
+          <dt>カチューシャ</dt><dd>歌に出てくる単語の一覧と、歌詞を入力して練習する機能です。</dd>
+          <dt>発音</dt><dd>お手本の読み上げと、マイクを使った発音チェックです。</dd>
+        </dl>
+
+        <h3>カタカナの読みについて</h3>
+        <p>単語に付けたカタカナは、アクセントによる母音の弱化（о → ア など）や無声化を反映した「実際の発音に近いめやす」です。つづりを 1 文字ずつ置き換えた読みとは違うことがあります。カタカナでは表せない音（ы、柔らかい子音、巻き舌の р など）もあるので、♪ のお手本と合わせて確認してください。</p>
+
+        <h3>読み上げについて</h3>
+        <p>読み上げにはお使いの端末・ブラウザに入っているロシア語の音声を使います。ロシア語の声が見つからない場合は読み上げできません。</p>
+        <ul class="sources">
+          <li>Windows：設定 → 時刻と言語 → 言語と地域 → 言語を追加 で「ロシア語」を追加し、音声（音声合成）をインストール。Edge なら追加しなくても「Microsoft Svetlana / Dmitry (Online)」が使えることがあります</li>
+          <li>iPhone：設定 → アクセシビリティ → 読み上げコンテンツ → 声 → ロシア語</li>
+          <li>Android：Google の音声サービスの設定で、ロシア語の音声データをインストール</li>
+        </ul>
+
+        <h3>アプリとして使う</h3>
+        <p>ホーム画面に追加すると、アプリのように全画面で使えます。https:// で公開されたページから追加した場合は、一度開いたあとオフラインでも動きます（読み上げの一部の声と発音チェックはネット接続が必要です）。</p>
+        <button class="btn small" id="installBtn" type="button" hidden>アプリとしてインストール</button>
+
+        <h3>出典・参考</h3>
+        <ul class="sources">
+          <li><a href="https://ja.wikipedia.org/wiki/%E3%83%AD%E3%82%B7%E3%82%A2%E8%AA%9E%E3%81%AE%E3%82%A2%E3%83%AB%E3%83%95%E3%82%A1%E3%83%99%E3%83%83%E3%83%88" target="_blank" rel="noopener">ロシア語のアルファベット – Wikipedia</a></li>
+          <li><a href="https://ja.wikipedia.org/wiki/%E3%83%AD%E3%82%B7%E3%82%A2%E8%AA%9E%E3%81%AE%E9%9F%B3%E9%9F%BB" target="_blank" rel="noopener">ロシア語の音韻 – Wikipedia</a></li>
+          <li><a href="https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%81%E3%83%A5%E3%83%BC%E3%82%B7%E3%83%A3_(%E6%AD%8C%E6%9B%B2)" target="_blank" rel="noopener">カチューシャ (歌曲) – Wikipedia</a></li>
+          <li>フォント：PT Serif／Marck Script／Zen Kaku Gothic New／Shippori Mincho（Google Fonts, SIL OFL）</li>
+        </ul>
+        <p>歌「カチューシャ」の歌詞は収録していません。単語は辞書形で個別に収録しています。</p>
+
+        <h3>データの保存</h3>
+        <p>正答率・設定・入力した歌詞は、お使いのブラウザの中だけに保存されます。外部へ送信されることはありません（発音チェックの音声認識を除く）。</p>
+        <button class="btn ghost small" id="resetStats" type="button">正答率の記録を消す</button>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="メニュー">
+    <button class="nav-item" data-view="quiz" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4M12 16.6v.2"/></svg>
+      <span>クイズ</span>
+    </button>
+    <button class="nav-item" data-view="letters" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>
+      <span>文字</span>
+    </button>
+    <button class="nav-item" data-view="guide" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7.5 4.6 4.5 5v13c3-.4 5.5 0 7.5 1.5 2-1.5 4.5-1.9 7.5-1.5V5c-3-.4-5.5 0-7.5 1.5zM12 6.5v13"/></svg>
+      <span>解説</span>
+    </button>
+    <button class="nav-item" data-view="song" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
+      <span>カチューシャ</span>
+    </button>
+    <button class="nav-item" data-view="speak" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/></svg>
+      <span>発音</span>
+    </button>
+    <button class="nav-item" data-view="about" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.6v.2"/></svg>
+      <span>説明</span>
+    </button>
+  </nav>
+
+  <dialog id="letterDialog" class="letter-dialog">
+    <form method="dialog">
+      <div class="dlg-pair ru" id="dlgPair"></div>
+      <div class="dlg-faces ru" id="dlgFaces"></div>
+      <p class="dlg-name" id="dlgName"></p>
+      <p class="dlg-sound" id="dlgSound"></p>
+      <p class="dlg-note" id="dlgNote"></p>
+      <div class="dlg-ex" id="dlgEx"></div>
+      <p class="dlg-stat" id="dlgStat"></p>
+      <div class="row-actions center">
+        <button class="btn ghost" id="dlgPrev" type="button" aria-label="前の文字">&lsaquo;</button>
+        <button class="btn ghost" value="close">閉じる</button>
+        <button class="btn ghost" id="dlgNext" type="button" aria-label="次の文字">&rsaquo;</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="data.js"></script>
+  <script src="guide.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
